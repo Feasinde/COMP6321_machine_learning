@@ -100,5 +100,5 @@ class SexPredDataset(Dataset):
         output_tensor = tensorFromSentence(self.__embeddings,self.__perv_victim[index][1])
         victim_padding = self.__max_length - len(input_tensor)
         perv_padding = self.__max_length - len(output_tensor)
-        input_tensor,output_tensor = F.pad(input_tensor, pad=(0, victim_padding), mode='constant', value=-1), F.pad(output_tensor, pad=(0, perv_padding), mode='constant', value=-1)
+        input_tensor,output_tensor = F.pad(input_tensor, pad=(0, victim_padding), mode='constant', value=0), F.pad(output_tensor, pad=(0, perv_padding), mode='constant', value=-1)
         return input_tensor,output_tensor
