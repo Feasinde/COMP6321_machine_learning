@@ -1,4 +1,4 @@
-import torch
+import torch,gensim
 import xml.etree.ElementTree as ET
 import torch.nn.functional as F
 from torch.utils.data import Dataset
@@ -18,7 +18,7 @@ def mergeSameAuthors(conv):
         for index in range(len(conversation_)-1):
             if conversation_[index][0]==conversation_[index+1][0]:
                 try:
-                    conversation_[index][1]+=" "+conversation_[index+1][1]
+                    conversation_[index][1]+=" eos "+conversation_[index+1][1]
                 except TypeError:
                     pass
                 conversation_[index+1][0]=''
@@ -39,6 +39,7 @@ def pervVictimExchange(conv,pervs):
         n=1
     for i in range(n,len(conv)-1,2):
         perv_victim.append([conv[i][1],conv[i+1][1]])
+    perv_victim = [(exchange[0] + " eos", exchange[1] + " eos") for exchange in perv_victim if type(exchange[0]) == str and type(exchange[1]) == str]
     return perv_victim
 
 def tensorFromSentence(embeddings,sentence,):
@@ -61,7 +62,7 @@ def tensorFromSentence(embeddings,sentence,):
 
 class SexPredDataset(Dataset):
     """Dataset of predator messages"""
-    def __init__(self,xml_file,txt_file,max_length=40):
+    def __init__(self,xml_file,txt_file,max_length=40,embeddings_file="embeddings.bin"):
         """
         
         Args:
@@ -71,6 +72,7 @@ class SexPredDataset(Dataset):
         
         """
         self.__max_length = max_length
+        self.__embeddings = gensim.models.KeyedVectors.load_word2vec_format(embeddings_file,binary=True,unicode_errors='ignore')
         self.__root = ET.parse(xml_file).getroot()
         self.__perv_convos = []
         with open(txt_file) as file:
@@ -94,9 +96,9 @@ class SexPredDataset(Dataset):
     def __len__(self): return len(self.__perv_victim)
     
     def __getitem__(self,index):
-        input_tensor = tensorFromSentence(embeddings,self.__perv_victim[index][0])
-        output_tensor = tensorFromSentence(embeddings,self.__perv_victim[index][1])
+        input_tensor = tensorFromSentence(self.__embeddings,self.__perv_victim[index][0])
+        output_tensor = tensorFromSentence(self.__embeddings,self.__perv_victim[index][1])
         victim_padding = self.__max_length - len(input_tensor)
         perv_padding = self.__max_length - len(output_tensor)
-        input_tensor,output_tensor = F.pad(input_tensor, pad=(0, victim_padding), mode='constant', value=0), F.pad(output_tensor, pad=(0, perv_padding), mode='constant', value=0)
-        return input_tensor,output_tensor
+        input_tensor,output_tensor = F.pad(input_tensor, pad=(0, victim_padding), mode='constant', value=-1), F.pad(output_tensor, pad=(0, perv_padding), mode='constant', value=-1)
+        return input_tensor,output_tensor,self.__perv_victim[index][0],self.__perv_victim[index][1]
