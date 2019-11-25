@@ -1,4 +1,8 @@
+import torch
 from torch import nn
+import torch.nn.functional as F
+
+device = torch.device("cpu")
 
 class Encoder(nn.Module):
     def __init__(self,
@@ -71,5 +75,5 @@ class SexPred(nn.Module):
         p=vic_perv[1]
         h_enc=self.__encoder.initHidden()
         _,h=self.__encoder(v,h_enc)
-        o,_=decoder(p,h)
+        o,_=self.__decoder(p,h)
         return o
