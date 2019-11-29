@@ -2,7 +2,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
-device = torch.device("cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Encoder(nn.Module):
     def __init__(self,
@@ -33,7 +33,7 @@ class Encoder(nn.Module):
     def initHidden(self):
         n=1 if self.__gru.bidirectional==False else 2
         l=self.__gru.num_layers
-        return torch.zeros(n*l, 1, self.__hidden_size, device=device)
+        return torch.zeros(n*l, 1, self.__hidden_size)
 
 class Decoder(nn.Module):
     def __init__(self,
@@ -73,7 +73,7 @@ class SexPred(nn.Module):
     def forward(self,vic_perv):
         v=vic_perv[0]
         p=vic_perv[1]
-        h_enc=self.__encoder.initHidden()
+        h_enc=self.__encoder.initHidden().to(device)
         _,h=self.__encoder(v,h_enc)
         o,_=self.__decoder(p,h)
         return o
