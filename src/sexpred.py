@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 import torch.nn.functional as F
+from src.dataset import tensorFromSentence
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -59,14 +60,6 @@ class Decoder(nn.Module):
         output,hidden=self.gru(output,hidden)
         output=self.out(output)
         return output,hidden
-    def predict(self, input_tensor, hidden):
-        output=self.embedding(input_tensor)
-        output=F.relu(output)
-        outputs = []
-        for loop:
-          output,hidden=self.gru(output,hidden)
-          output=self.out(output)
-          outputs.append()
 
 class SexPred(nn.Module):
     """
@@ -87,3 +80,9 @@ class SexPred(nn.Module):
         _,h=self.encoder(v,h_enc)
         o,_=self.decoder(p,h)
         return o
+    
+#     def predict(self,input_tensor,hidden):
+#         output=self.decoder(input_tensor,hidden)
+        
+        
+        
