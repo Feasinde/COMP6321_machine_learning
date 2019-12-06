@@ -8,7 +8,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 class Encoder(nn.Module):
     def __init__(self,
                  embeddings_tensor,
-                 hidden_size=40,
+                 hidden_size=256,
                  dropout=0.5):
         super(Encoder, self).__init__()
         self.embedding_size=len(embeddings_tensor[0])
@@ -36,7 +36,7 @@ class Encoder(nn.Module):
 class Decoder(nn.Module):
     def __init__(self,
                  embeddings_tensor,
-                 hidden_size=40,
+                 hidden_size=256,
                  dropout=0.5):
         super(Decoder, self).__init__()
         self.embedding_size=len(embeddings_tensor[0])
@@ -66,11 +66,12 @@ class SexPred(nn.Module):
     Encoder-decoder model that imitates the behaviour of an online
     sexual predator
     """
-    def __init__(self,embeddings_tensor):
+    def __init__(self,embeddings_tensor,hidden_size=256):
         super(SexPred,self).__init__()
         self.embeddings_tensor=embeddings_tensor
-        self.encoder=Encoder(self.embeddings_tensor)
-        self.decoder=Decoder(self.embeddings_tensor)
+        self.hidden_size=hidden_size
+        self.encoder=Encoder(self.embeddings_tensor,hidden_size=self.hidden_size)
+        self.decoder=Decoder(self.embeddings_tensor,hidden_size=self.hidden_size)
     
     def forward(self,vic_perv):
         v=vic_perv[0]

@@ -8,8 +8,8 @@ device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def train(input_tensor,target,model,optimiser,criterion):
     model.train()
     optimiser.zero_grad()
-    prediction = model((input_tensor,target)).permute(0,2,1)
-    loss = criterion(prediction,target)
+    prediction = model((input_tensor,target[:,:-1])).permute(0,2,1)
+    loss = criterion(prediction,target[:,1:])
     loss.backward()
     # clip_grad_norm_(model.parameters(),clip)
     optimiser.step()
@@ -17,8 +17,8 @@ def train(input_tensor,target,model,optimiser,criterion):
 
 def valid(input_tensor,target,model,criterion):
     model.eval()
-    prediction = model((input_tensor,target)).permute(0,2,1)
-    loss = criterion(prediction,target)
+    prediction = model((input_tensor,target[:,:-1])).permute(0,2,1)
+    loss = criterion(prediction,target[:,1:])
     return loss.item(), prediction
 
 def trainIters(model,
@@ -27,7 +27,7 @@ def trainIters(model,
                batch_size,
                n_epochs,
                learning_rate,
-               weight_decay):
+               weight_decay=0):
     print("CUDA is available!" if torch.cuda.is_available() else "NO CUDA 4 U")
 
     optimiser = torch.optim.Adam(model.parameters(), lr=learning_rate,weight_decay=weight_decay)
@@ -45,12 +45,12 @@ def trainIters(model,
     for epoch in tqdm(range(1,n_epochs+1),desc='Epoch',leave=False):
         plt.gca().cla()
         plt.xlim(0,n_epochs)
-        plt.ylim(0,1)
+        plt.ylim(0,2)
         plt.title("Learning curve")
         plt.xlabel("Number of epochs")
         plt.ylabel("Loss")
-        plt.text(n_epochs/2,.9,"Train loss: {:.2f}".format(train_losses[-1]))
-        plt.text(n_epochs/2,.8,"Validation loss: {:.2f}".format(valid_losses[-1]))
+        plt.text(n_epochs/2,1.9,"Train loss: {:.2f}".format(train_losses[-1]))
+        plt.text(n_epochs/2,1.8,"Validation loss: {:.2f}".format(valid_losses[-1]))
         plt.plot(train_losses, "-b", label="Training loss")
         plt.plot(valid_losses, "-r", label="Validation loss")
         plt.legend(loc="upper left")
